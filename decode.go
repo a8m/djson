@@ -55,33 +55,24 @@ type decoder struct {
 func (d *decoder) any() (*Value, error) {
 	var (
 		err error
-		val interface{}
-
 		lit *literal
-		typ ValueType
+		val interface{}
 	)
 
 	switch c := d.skipSpaces(); c {
 	case 'f':
 		lit = litFalse
-		typ = Bool
 	case 't':
 		lit = litTrue
-		typ = Bool
 	case 'n':
 		lit = litNull
-		typ = Null
 	case '[':
-		typ = Array
 		val, err = d.array()
 	case '{':
-		typ = Object
 		val, err = d.object()
 	case '"':
-		typ = String
 		val, err = d.string()
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
-		typ = Number
 		val, err = d.number(c == '-')
 	default:
 		return nil, d.error(c, "looking for beginning of value")
@@ -104,7 +95,7 @@ func (d *decoder) any() (*Value, error) {
 		return nil, err
 	}
 
-	return &Value{typ, val}, nil
+	return &Value{val}, nil
 }
 
 func (d *decoder) string() (string, error) {

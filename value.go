@@ -20,7 +20,6 @@ const (
 )
 
 type Value struct {
-	ValueType
 	data interface{}
 }
 
