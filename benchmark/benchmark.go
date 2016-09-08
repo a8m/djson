@@ -1,5 +1,17 @@
 package benchmark
 
+var smallFixture []byte = []byte(`{
+    "st": 1,
+    "sid": 486,
+    "tt": "active",
+    "gr": 0,
+    "uuid": "de305d54-75b4-431b-adb2-eb6b9e546014",
+    "ip": "127.0.0.1",
+    "ua": "user_agent",
+    "tz": -6,
+    "v": 1
+}`)
+
 var mediumFixture = []byte(`{
   "person": {
     "id": "d50887ca-a6ce-4e59-b89f-14f0b5d03b03",
