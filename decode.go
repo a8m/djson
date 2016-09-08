@@ -38,7 +38,7 @@ var (
 )
 
 // Decode is the exported method to decode arbitrary into Value object.
-func Decode(data []byte) (*Value, error) {
+func Decode(data []byte) (Value, error) {
 	d := &decoder{
 		data: data,
 		end:  len(data),
@@ -52,7 +52,7 @@ type decoder struct {
 	end  int
 }
 
-func (d *decoder) any() (*Value, error) {
+func (d *decoder) any() (Value, error) {
 	var (
 		err error
 		lit *literal
@@ -75,7 +75,7 @@ func (d *decoder) any() (*Value, error) {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
 		val, err = d.number(c == '-')
 	default:
-		return nil, d.error(c, "looking for beginning of value")
+		return Value{}, d.error(c, "looking for beginning of value")
 	}
 
 	// if is literal
@@ -92,10 +92,9 @@ func (d *decoder) any() (*Value, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return Value{}, err
 	}
-
-	return &Value{val}, nil
+	return Value{val}, nil
 }
 
 func (d *decoder) string() (string, error) {
@@ -241,7 +240,7 @@ invalid:
 	return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
 }
 
-func (d *decoder) array() ([]*Value, error) {
+func (d *decoder) array() ([]Value, error) {
 	// TODO:
 	// should test if the array contains 1 element
 	// if is, we append and we're done, else, use the
@@ -249,9 +248,9 @@ func (d *decoder) array() ([]*Value, error) {
 	// do benchmark before goes to implemtation
 	var (
 		c     byte
-		v     *Value
+		v     Value
 		err   error
-		array []*Value
+		array []Value
 	)
 
 	d.pos++
@@ -286,13 +285,13 @@ func (d *decoder) array() ([]*Value, error) {
 	return array, err
 }
 
-func (d *decoder) object() (map[string]*Value, error) {
+func (d *decoder) object() (map[string]Value, error) {
 	var (
 		c   byte
 		k   string
-		v   *Value
+		v   Value
 		err error
-		obj map[string]*Value
+		obj map[string]Value
 	)
 	// '{' already scanned
 	d.pos++
@@ -326,7 +325,7 @@ func (d *decoder) object() (map[string]*Value, error) {
 		}
 
 		if obj == nil {
-			obj = make(map[string]*Value)
+			obj = make(map[string]Value)
 		}
 		obj[k] = v
 
