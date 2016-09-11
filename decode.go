@@ -37,13 +37,14 @@ var (
 	litFalse = &literal{"false", []byte("alse"), false}
 )
 
-// Decode is the exported method to decode arbitrary into Value object.
+// Decode is the exported method to decode arbitrary data into Value object.
 func Decode(data []byte) (Value, error) {
 	d := &decoder{
 		data: data,
 		end:  len(data),
 	}
-	return d.any()
+	vdata, err := d.any()
+	return Value{vdata}, err
 }
 
 type decoder struct {
@@ -52,7 +53,7 @@ type decoder struct {
 	end  int
 }
 
-func (d *decoder) any() (Value, error) {
+func (d *decoder) any() (interface{}, error) {
 	var (
 		err error
 		lit *literal
@@ -75,7 +76,7 @@ func (d *decoder) any() (Value, error) {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
 		val, err = d.number(c == '-')
 	default:
-		return Value{}, d.error(c, "looking for beginning of value")
+		return nil, d.error(c, "looking for beginning of value")
 	}
 
 	// if is literal
@@ -92,9 +93,9 @@ func (d *decoder) any() (Value, error) {
 	}
 
 	if err != nil {
-		return Value{}, err
+		return nil, err
 	}
-	return Value{val}, nil
+	return val, nil
 }
 
 func (d *decoder) string() (string, error) {
@@ -213,10 +214,11 @@ func (d *decoder) number(neg bool) (float64, error) {
 	// e or E followed by an optional - or + and
 	// 1 or more digits.
 	if c == 'e' || c == 'E' {
+		isFloat = true
 		c = d.next()
 		if c == '+' || c == '-' {
 			d.pos++
-			if d.peek(); c < '0' || c > '9' {
+			if c = d.data[d.pos]; c < '0' || c > '9' {
 				goto invalid
 			}
 		}
@@ -240,7 +242,7 @@ invalid:
 	return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
 }
 
-func (d *decoder) array() ([]Value, error) {
+func (d *decoder) array() ([]interface{}, error) {
 	// TODO:
 	// should test if the array contains 1 element
 	// if is, we append and we're done, else, use the
@@ -248,9 +250,9 @@ func (d *decoder) array() ([]Value, error) {
 	// do benchmark before goes to implemtation
 	var (
 		c     byte
-		v     Value
+		v     interface{}
 		err   error
-		array []Value
+		array []interface{}
 	)
 
 	d.pos++
@@ -285,13 +287,13 @@ func (d *decoder) array() ([]Value, error) {
 	return array, err
 }
 
-func (d *decoder) object() (map[string]Value, error) {
+func (d *decoder) object() (map[string]interface{}, error) {
 	var (
 		c   byte
 		k   string
-		v   Value
+		v   interface{}
 		err error
-		obj map[string]Value
+		obj map[string]interface{}
 	)
 	// '{' already scanned
 	d.pos++
@@ -325,7 +327,7 @@ func (d *decoder) object() (map[string]Value, error) {
 		}
 
 		if obj == nil {
-			obj = make(map[string]Value)
+			obj = make(map[string]interface{})
 		}
 		obj[k] = v
 
@@ -346,6 +348,7 @@ func (d *decoder) object() (map[string]Value, error) {
 }
 
 // TODO: maybe is better to return -1 as end; or (c, ok)
+// and do conversion
 func (d *decoder) peek() byte {
 	if d.pos < d.end-1 {
 		return d.data[d.pos+1]
