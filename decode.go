@@ -381,7 +381,7 @@ loop:
 
 // emit sytax errors
 func (d *decoder) error(c byte, context string) error {
-	return &SyntaxError{"invalid character " + quoteChar(c) + " " + context, d.pos}
+	return &SyntaxError{"invalid character " + quoteChar(c) + " " + context, d.pos + 1}
 }
 
 // quoteChar formats c as a quoted character literal
