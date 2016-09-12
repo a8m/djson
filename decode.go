@@ -38,13 +38,19 @@ var (
 )
 
 // Decode is the exported method to decode arbitrary data into Value object.
-func Decode(data []byte) (Value, error) {
+func Decode(data []byte) (*Value, error) {
 	d := &decoder{
 		data: data,
 		end:  len(data),
 	}
 	vdata, err := d.any()
-	return Value{vdata}, err
+	if err != nil {
+		return nil, err
+	}
+	if c := d.skipSpaces(); d.pos < d.end {
+		return nil, d.error(c, "after top-level value")
+	}
+	return &Value{vdata}, nil
 }
 
 type decoder struct {
@@ -95,6 +101,7 @@ func (d *decoder) any() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return val, nil
 }
 
@@ -358,7 +365,7 @@ func (d *decoder) peek() byte {
 
 func (d *decoder) next() byte {
 	c := d.peek()
-	if c != 0 {
+	if d.pos < d.end {
 		d.pos++
 	}
 	return c
