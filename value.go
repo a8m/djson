@@ -18,11 +18,3 @@ const (
 	Array
 	Unknown
 )
-
-type Value struct {
-	data interface{}
-}
-
-func (v *Value) Data() interface{} {
-	return v.data
-}

@@ -90,8 +90,8 @@ func TestDecode(t *testing.T) {
 			t.Errorf("#%d: %v, want %v", i, err, tt.err)
 		}
 		if out != nil {
-			if data := out.Data(); !reflect.DeepEqual(data, tt.expected) {
-				t.Errorf("#%d: %v, want %v", i, data, tt.expected)
+			if !reflect.DeepEqual(out, tt.expected) {
+				t.Errorf("#%d: %v, want %v", i, out, tt.expected)
 			}
 		}
 
@@ -192,7 +192,7 @@ func TestWithStdDecoder(t *testing.T) {
 	expected := make(map[string]interface{})
 	json.Unmarshal(allValueIndent, &expected)
 	out, _ := Decode(allValueIndent)
-	if actual := out.Data().(map[string]interface{}); !reflect.DeepEqual(actual, expected) {
+	if actual := out.(map[string]interface{}); !reflect.DeepEqual(actual, expected) {
 		t.Errorf("compare to std unmarshaler \n\tactual: %v\n\twant: %v", actual, expected)
 
 	}
