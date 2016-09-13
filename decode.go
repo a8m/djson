@@ -109,8 +109,8 @@ func (d *decoder) string() (string, error) {
 	d.pos++
 
 	var (
-		start     = d.pos
-		isEscaped bool
+		start   = d.pos
+		unquote bool
 		// This idea comes from jsonparser.
 		// stack-allocated array for allocation-free unescaping of small strings
 		// if a string longer than this needs to be escaped, it will result in a heap allocation
@@ -127,7 +127,7 @@ scan:
 		switch {
 		case c == '"':
 			var s string
-			if isEscaped {
+			if unquote {
 				data, ok := unquoteBytes(d.data[start:d.pos], stackbuf[:])
 				if !ok {
 					return "", ErrStringEscape
@@ -140,7 +140,7 @@ scan:
 			return s, nil
 		case c == '\\':
 			d.pos++
-			isEscaped = true
+			unquote = true
 			switch c := d.data[d.pos]; c {
 			case 'u':
 				goto escape_u
@@ -153,6 +153,9 @@ scan:
 			return "", d.error(c, "in string literal")
 		default:
 			d.pos++
+			if c > unicode.MaxASCII {
+				unquote = true
+			}
 		}
 	}
 
@@ -259,7 +262,7 @@ func (d *decoder) array() ([]interface{}, error) {
 		c     byte
 		v     interface{}
 		err   error
-		array []interface{}
+		array = make([]interface{}, 0)
 	)
 
 	d.pos++
@@ -300,7 +303,7 @@ func (d *decoder) object() (map[string]interface{}, error) {
 		k   string
 		v   interface{}
 		err error
-		obj map[string]interface{}
+		obj = make(map[string]interface{})
 	)
 	// '{' already scanned
 	d.pos++
@@ -333,9 +336,6 @@ func (d *decoder) object() (map[string]interface{}, error) {
 			break
 		}
 
-		if obj == nil {
-			obj = make(map[string]interface{})
-		}
 		obj[k] = v
 
 		c = d.skipSpaces()
