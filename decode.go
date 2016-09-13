@@ -267,33 +267,31 @@ func (d *decoder) array() ([]interface{}, error) {
 
 	d.pos++
 
-	// TODO: test if it is more fast to use labels for inlining
-	for {
-		c = d.skipSpaces()
-		if c == ']' {
-			d.pos++
-			return array, nil
-		}
-
-		// read value
-		if v, err = d.any(); err != nil {
-			break
-		}
-
-		array = append(array, v)
-
-		c = d.skipSpaces()
-		if c == ',' {
-			d.pos++
-		} else if c == ']' {
-			d.pos++
-			break
-		} else {
-			err = d.error(c, "after array element")
-			break
-		}
+scan:
+	c = d.skipSpaces()
+	if c == ']' {
+		d.pos++
+		return array, nil
 	}
 
+	// read value
+	if v, err = d.any(); err != nil {
+		goto exit
+	}
+
+	array = append(array, v)
+
+	c = d.skipSpaces()
+	if c == ',' {
+		d.pos++
+		goto scan
+	} else if c == ']' {
+		d.pos++
+	} else {
+		err = d.error(c, "after array element")
+	}
+
+exit:
 	return array, err
 }
 
