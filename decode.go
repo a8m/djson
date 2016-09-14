@@ -177,79 +177,57 @@ escape_u:
 
 func (d *decoder) number(neg bool) (float64, error) {
 	var (
-		n       float64
-		c       byte
-		isFloat bool
-		start   int
+		n     float64
+		c     byte
+		start int
+
+		hasE       bool
+		hasDot     bool
+		wantNumber bool
 	)
 
 	if neg {
 		d.pos++
-		if c = d.peek(); c < '0' && c > '9' {
-			goto invalid
-		}
+		wantNumber = true
 	}
 
 	start = d.pos
+scan:
 	c = d.data[d.pos]
-
-	// digits
 	switch {
-	case c == '0':
-		c = d.next()
-	case '1' <= c && c <= '9':
-		for ; c >= '0' && c <= '9'; c = d.next() {
+	case '0' <= c && c <= '9':
+		if !hasDot {
 			n = 10*n + float64(c-'0')
 		}
-	default:
-		goto invalid
-	}
-
-	// . followed by 1 or more digits.
-	// i.e: float number
-	if c == '.' {
-		isFloat = true
-		if c = d.peek(); '0' <= c && c <= '9' {
-			d.pos += 2
-			for d.pos < d.end {
-				c = d.data[d.pos]
-				if c < '0' || c > '9' {
-					break
-				}
-				d.pos++
-			}
-		}
-	}
-
-	// e or E followed by an optional - or + and
-	// 1 or more digits.
-	if c == 'e' || c == 'E' {
-		isFloat = true
-		c = d.next()
-		if c == '+' || c == '-' {
+		wantNumber = false
+	case (c == 'E' || c == 'e') && !hasE && !wantNumber:
+		hasE = true
+		if c = d.peek(); c == '+' || c == '-' {
 			d.pos++
-			if c = d.data[d.pos]; c < '0' || c > '9' {
-				goto invalid
+		}
+		fallthrough
+	case c == '.' && !hasDot && !wantNumber:
+		hasDot = true
+		wantNumber = true
+	default:
+		// if we're done
+		if !wantNumber {
+			if hasDot {
+				v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
+				if err != nil {
+					return 0, err
+				}
+				n = v
 			}
+			if neg {
+				return -n, nil
+			}
+			return n, nil
 		}
-		for ; '0' <= c && c <= '9'; c = d.next() {
-		}
+		return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
 	}
-
-	if isFloat {
-		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
-		if err != nil {
-			return 0, err
-		}
-		n = v
-	}
-	if neg {
-		return -n, nil
-	}
-	return n, nil
-
-invalid:
-	return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
+	d.pos++
+	goto scan
 }
 
 func (d *decoder) array() ([]interface{}, error) {
@@ -271,7 +249,7 @@ scan:
 	c = d.skipSpaces()
 	if c == ']' {
 		d.pos++
-		return array, nil
+		goto exit
 	}
 
 	// read value
