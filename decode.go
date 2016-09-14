@@ -196,9 +196,7 @@ scan:
 	c = d.data[d.pos]
 	switch {
 	case '0' <= c && c <= '9':
-		if !hasDot {
-			n = 10*n + float64(c-'0')
-		}
+		n = 10*n + float64(c-'0')
 		wantNumber = false
 	case (c == 'E' || c == 'e') && !hasE && !wantNumber:
 		hasE = true
