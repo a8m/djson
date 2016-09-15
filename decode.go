@@ -43,6 +43,13 @@ type decoder struct {
 	end  int
 }
 
+func newDecoder(data []byte) *decoder {
+	return &decoder{
+		data: data,
+		end:  len(data),
+	}
+}
+
 func (d *decoder) any() (interface{}, error) {
 	var (
 		err error
