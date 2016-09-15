@@ -37,22 +37,6 @@ var (
 	litFalse = &literal{"false", []byte("alse"), false}
 )
 
-// Decode is the exported method to decode arbitrary data into Value object.
-func Decode(data []byte) (interface{}, error) {
-	d := &decoder{
-		data: data,
-		end:  len(data),
-	}
-	vdata, err := d.any()
-	if err != nil {
-		return nil, err
-	}
-	if c := d.skipSpaces(); d.pos < d.end {
-		return nil, d.error(c, "after top-level value")
-	}
-	return vdata, nil
-}
-
 type decoder struct {
 	data []byte
 	pos  int
