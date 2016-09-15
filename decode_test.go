@@ -82,9 +82,6 @@ var decodeTests = []decodeTest{
 
 func TestDecode(t *testing.T) {
 	for i, tt := range decodeTests {
-		if i != len(decodeTests)-1 {
-			continue
-		}
 		out, err := Decode([]byte(tt.in))
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("#%d: %v, want %v", i, err, tt.err)
@@ -94,7 +91,6 @@ func TestDecode(t *testing.T) {
 				t.Errorf("#%d: %v, want %v", i, out, tt.expected)
 			}
 		}
-
 	}
 }
 
@@ -197,3 +193,23 @@ func TestWithStdDecoder(t *testing.T) {
 
 	}
 }
+
+/*
+func TestDecodeString(t *testing.T) {
+	for test := range []struct {
+		err     error
+		in, out string
+	}{
+		{in: `"foo"`, expected: "foo"},
+	} {
+		out, err := Decode([]byte(tt.in))
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("#%d: %v, want %v", i, err, tt.err)
+		}
+		if out != nil {
+			if !reflect.DeepEqual(out, tt.expected) {
+				t.Errorf("#%d: %v, want %v", i, out, tt.expected)
+			}
+		}
+	}
+}*/

@@ -201,30 +201,31 @@ scan:
 	default:
 		// if we're done
 		if !wantNumber {
-			if hasDot {
-				v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
-				if err != nil {
-					return 0, err
-				}
-				n = v
-			}
-			if neg {
-				return -n, nil
-			}
-			return n, nil
+			goto exit
 		}
 		return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
 	}
+
 	d.pos++
-	goto scan
+	if d.pos < d.end {
+		goto scan
+	}
+exit:
+
+	if hasDot {
+		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
+		if err != nil {
+			return 0, err
+		}
+		n = v
+	}
+	if neg {
+		return -n, nil
+	}
+	return n, nil
 }
 
 func (d *decoder) array() ([]interface{}, error) {
-	// TODO:
-	// should test if the array contains 1 element
-	// if is, we append and we're done, else, use the
-	// growable ogix
-	// do benchmark before goes to implemtation
 	var (
 		c     byte
 		v     interface{}
