@@ -194,22 +194,47 @@ func TestWithStdDecoder(t *testing.T) {
 	}
 }
 
-/*
 func TestDecodeString(t *testing.T) {
-	for test := range []struct {
-		err     error
-		in, out string
+	for i, tt := range []struct {
+		err          error
+		in, expected string
 	}{
 		{in: `"foo"`, expected: "foo"},
+		{in: `   "foo"`, expected: "foo"},
+		{in: `"foo"   `, expected: "foo"},
+		{in: `   "foo"   `, expected: "foo"},
+		{in: `   "foo"   1`, err: &SyntaxError{"invalid character '1' after top-level value", 12}},
+		{in: `"foo"   "`, err: &SyntaxError{"invalid character '\"' after top-level value", 9}},
 	} {
-		out, err := Decode([]byte(tt.in))
+		out, err := DecodeString([]byte(tt.in))
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("#%d: %v, want %v", i, err, tt.err)
 		}
-		if out != nil {
-			if !reflect.DeepEqual(out, tt.expected) {
-				t.Errorf("#%d: %v, want %v", i, out, tt.expected)
-			}
+		if out != tt.expected {
+			t.Errorf("#%d: %v, want %v", i, out, tt.expected)
 		}
 	}
-}*/
+}
+
+func TestDecodeNumber(t *testing.T) {
+	for i, tt := range []struct {
+		err      error
+		in       string
+		expected float64
+	}{
+		{in: `1`, expected: 1},
+		{in: `   1`, expected: 1},
+		{in: `1.1   `, expected: 1.1},
+		{in: `   -1.1   `, expected: -1.1},
+		{in: `   1   1`, err: &SyntaxError{"invalid character '1' after top-level value", 8}},
+		{in: `1   "`, err: &SyntaxError{"invalid character '\"' after top-level value", 5}},
+	} {
+		out, err := DecodeNumber([]byte(tt.in))
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("#%d: %v, want %v", i, err, tt.err)
+		}
+		if out != tt.expected {
+			t.Errorf("#%d: %v, want %v", i, out, tt.expected)
+		}
+	}
+}
