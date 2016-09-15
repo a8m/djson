@@ -238,3 +238,49 @@ func TestDecodeNumber(t *testing.T) {
 		}
 	}
 }
+
+func TestDecodeArray(t *testing.T) {
+	for i, tt := range []struct {
+		err      error
+		in       string
+		expected []interface{}
+	}{
+		{in: `["a"]`, expected: []interface{}{"a"}},
+		{in: `["a"]   `, expected: []interface{}{"a"}},
+		{in: `   ["a"]`, expected: []interface{}{"a"}},
+		{in: `   [     "a"]`, expected: []interface{}{"a"}},
+		{in: `   ["a"      ]`, expected: []interface{}{"a"}},
+		{in: `["a"      ]1`, err: &SyntaxError{"invalid character '1' after top-level value", 12}},
+	} {
+		out, err := DecodeArray([]byte(tt.in))
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("#%d: %v, want %v", i, err, tt.err)
+		}
+		if !reflect.DeepEqual(out, tt.expected) {
+			t.Errorf("#%d: %v, want %v", i, out, tt.expected)
+		}
+	}
+}
+
+func TestDecodeObject(t *testing.T) {
+	for i, tt := range []struct {
+		err      error
+		in       string
+		expected map[string]interface{}
+	}{
+		{in: `{"a":"a"}`, expected: map[string]interface{}{"a": "a"}},
+		{in: `   {"a":"a"}`, expected: map[string]interface{}{"a": "a"}},
+		{in: `{"a":"1"}   `, expected: map[string]interface{}{"a": "1"}},
+		{in: `{   "a":"1"}`, expected: map[string]interface{}{"a": "1"}},
+		{in: `{"a"   :1  }`, expected: map[string]interface{}{"a": float64(1)}},
+		{in: `{"a":1}   1`, err: &SyntaxError{"invalid character '1' after top-level value", 11}},
+	} {
+		out, err := DecodeObject([]byte(tt.in))
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("#%d: %v, want %v", i, err, tt.err)
+		}
+		if !reflect.DeepEqual(out, tt.expected) {
+			t.Errorf("#%d: %v, want %v", i, out, tt.expected)
+		}
+	}
+}
