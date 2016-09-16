@@ -62,7 +62,9 @@ func Decode(data []byte) (interface{}, error) {
 // Decode is the exported method to decode arbitrary data into Value object.
 func DecodeObject(data []byte) (map[string]interface{}, error) {
 	d := newDecoder(data)
-	d.skipSpaces()
+	if c := d.skipSpaces(); c != '{' {
+		return nil, d.error(c, "looking for beginning of object")
+	}
 	val, err := d.object()
 	if err != nil {
 		return nil, err
@@ -76,41 +78,15 @@ func DecodeObject(data []byte) (map[string]interface{}, error) {
 // Decode is the exported method to decode arbitrary data into Value object.
 func DecodeArray(data []byte) ([]interface{}, error) {
 	d := newDecoder(data)
-	d.skipSpaces()
+	if c := d.skipSpaces(); c != '[' {
+		return nil, d.error(c, "looking for beginning of array")
+	}
 	val, err := d.array()
 	if err != nil {
 		return nil, err
 	}
 	if c := d.skipSpaces(); d.pos < d.end {
 		return nil, d.error(c, "after top-level value")
-	}
-	return val, nil
-}
-
-// Decode is the exported method to decode arbitrary data into Value object.
-func DecodeString(data []byte) (string, error) {
-	d := newDecoder(data)
-	d.skipSpaces()
-	val, err := d.string()
-	if err != nil {
-		return "", err
-	}
-	if c := d.skipSpaces(); d.pos < d.end {
-		return "", d.error(c, "after top-level value")
-	}
-	return val, nil
-}
-
-// Decode is the exported method to decode arbitrary data into Value object.
-func DecodeNumber(data []byte) (float64, error) {
-	d := newDecoder(data)
-	c := d.skipSpaces()
-	val, err := d.number(c == '-')
-	if err != nil {
-		return 0, err
-	}
-	if c := d.skipSpaces(); d.pos < d.end {
-		return 0, d.error(c, "after top-level value")
 	}
 	return val, nil
 }
