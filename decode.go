@@ -143,49 +143,59 @@ escape_u:
 // number called by `any` after reading `-` or number between 0 to 9
 func (d *decoder) number(neg bool) (float64, error) {
 	var (
-		n     float64
-		c     byte
-		start int
-
-		hasE       bool
-		hasDot     bool
-		wantNumber bool
+		n       float64
+		c       byte
+		start   int
+		isFloat bool
 	)
 
 	if neg {
 		d.pos++
-		wantNumber = true
+		if c = d.data[d.pos]; c < '0' && c > '9' {
+			return 0, d.error(c, "in negative numeric literal")
+		}
 	}
 
 	start = d.pos
+	c = d.data[d.pos]
 
-scan:
-	for d.pos < d.end {
-		c = d.data[d.pos]
-		switch {
-		case '0' <= c && c <= '9':
+	// digits first
+	switch {
+	case c == '0':
+		c = d.next()
+	case '1' <= c && c <= '9':
+		for ; c >= '0' && c <= '9'; c = d.next() {
 			n = 10*n + float64(c-'0')
-			wantNumber = false
-		case (c == 'E' || c == 'e') && !hasE && !wantNumber:
-			hasE = true
-			if c = d.peek(); c == '+' || c == '-' {
-				d.pos++
-			}
-			fallthrough
-		case c == '.' && !hasDot && !wantNumber:
-			hasDot = true
-			wantNumber = true
-		default:
-			// if we're done
-			if !wantNumber {
-				break scan
-			}
-			return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
 		}
-		d.pos++
 	}
 
-	if hasDot {
+	// . followed by 1 or more digits
+	if c == '.' {
+		d.pos++
+		isFloat = true
+		if c = d.data[d.pos]; c < '0' && c > '9' {
+			return 0, d.error(c, "after decimal point in numeric literal")
+		}
+		for c = d.next(); '0' <= c && c <= '9'; {
+			c = d.next()
+		}
+	}
+
+	// e or E followed by an optional - or + and
+	// 1 or more digits.
+	if c == 'e' || c == 'E' {
+		isFloat = true
+		if c = d.next(); c == '+' || c == '-' {
+			if c = d.next(); c < '0' || c > '9' {
+				return 0, d.error(c, "in exponent of numeric literal")
+			}
+			for c = d.next(); '0' <= c && c <= '9'; {
+				c = d.next()
+			}
+		}
+	}
+
+	if isFloat {
 		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
 		if err != nil {
 			return 0, err
