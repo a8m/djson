@@ -76,10 +76,6 @@ func (d *decoder) string() (string, error) {
 	var (
 		unquote bool
 		start   = d.pos
-		// stack-allocated array for allocation-free unescaping of small strings
-		// if a string longer than this needs to be escaped, it will result in a
-		// heap allocation; idea comes from github.com/burger/jsonparser
-		stackbuf [64]byte
 	)
 
 scan:
@@ -93,6 +89,10 @@ scan:
 		case c == '"':
 			var s string
 			if unquote {
+				// stack-allocated array for allocation-free unescaping of small strings
+				// if a string longer than this needs to be escaped, it will result in a
+				// heap allocation; idea comes from github.com/burger/jsonparser
+				var stackbuf [64]byte
 				data, ok := unquoteBytes(d.data[start:d.pos], stackbuf[:])
 				if !ok {
 					return "", ErrStringEscape
