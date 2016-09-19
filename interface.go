@@ -1,5 +1,23 @@
 package djson
 
+import "errors"
+
+// A SyntaxError is a description of a JSON syntax error.
+type SyntaxError struct {
+	msg    string // description of error
+	Offset int    // error occurred after reading Offset bytes
+}
+
+func (e *SyntaxError) Error() string { return e.msg }
+
+// Predefined errors
+var (
+	// Syntax errors
+	ErrUnexpectedEOF    = &SyntaxError{"unexpected end of JSON input", -1}
+	ErrInvalidHexEscape = &SyntaxError{"invalid hexadecimal escape sequence", -1}
+	ErrStringEscape     = errors.New("djson: encountered an invalid escape sequence in a string")
+)
+
 // ValueType identifies the type of a parsed value.
 type ValueType int
 

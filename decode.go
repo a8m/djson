@@ -1,42 +1,11 @@
 package djson
 
 import (
-	"errors"
 	"strconv"
 	"unicode"
-	"unicode/utf16"
-	"unicode/utf8"
 )
 
-// A SyntaxError is a description of a JSON syntax error.
-type SyntaxError struct {
-	msg    string // description of error
-	Offset int    // error occurred after reading Offset bytes
-}
-
-func (e *SyntaxError) Error() string { return e.msg }
-
-// Predefined errors
-var (
-	// Syntax errors
-	ErrUnexpectedEOF    = &SyntaxError{"unexpected end of JSON input", -1}
-	ErrInvalidHexEscape = &SyntaxError{"invalid hexadecimal escape sequence", -1}
-	ErrStringEscape     = errors.New("djson: encountered an invalid escape sequence in a string")
-)
-
-// literal
-type literal struct {
-	name  string
-	bytes []byte
-	val   interface{}
-}
-
-var (
-	litNull  = &literal{"null", []byte("ull"), nil}
-	litTrue  = &literal{"true", []byte("rue"), true}
-	litFalse = &literal{"false", []byte("alse"), false}
-)
-
+// decoder is the object that holds the state of the scaning
 type decoder struct {
 	data []byte
 	pos  int
@@ -50,6 +19,8 @@ func newDecoder(data []byte) *decoder {
 	}
 }
 
+// any used to decode any valid JSON value, and returns an
+// interface{} that holds the actual data
 func (d *decoder) any() (interface{}, error) {
 	var (
 		err error
@@ -76,12 +47,14 @@ func (d *decoder) any() (interface{}, error) {
 		return nil, d.error(c, "looking for beginning of value")
 	}
 
-	// if is literal
+	// if we encounter a start of literal, we consume the literal string,
+	// while expect it to be equal to the literal variables above, and then
+	// decode it into the value v.
 	if lit != nil {
 		d.pos++
 		for i, c := range lit.bytes {
 			if nc := d.data[d.pos+i]; nc != c {
-				err = d.error(nc, "in literal null (expecting '"+string(c)+"')")
+				err = d.error(nc, "in literal "+lit.name+"(expecting '"+string(c)+"')")
 				break
 			}
 		}
@@ -96,15 +69,16 @@ func (d *decoder) any() (interface{}, error) {
 	return val, nil
 }
 
+// string called by `any` or `object`(for map keys) after reading `"`
 func (d *decoder) string() (string, error) {
 	d.pos++
 
 	var (
-		start   = d.pos
 		unquote bool
-		// This idea comes from jsonparser.
+		start   = d.pos
 		// stack-allocated array for allocation-free unescaping of small strings
-		// if a string longer than this needs to be escaped, it will result in a heap allocation
+		// if a string longer than this needs to be escaped, it will result in a
+		// heap allocation; idea comes from github.com/burger/jsonparser
 		stackbuf [64]byte
 	)
 
@@ -166,6 +140,7 @@ escape_u:
 	goto scan
 }
 
+// number called by `any` after reading `-` or number between 0 to 9
 func (d *decoder) number(neg bool) (float64, error) {
 	var (
 		n     float64
@@ -183,34 +158,32 @@ func (d *decoder) number(neg bool) (float64, error) {
 	}
 
 	start = d.pos
-scan:
-	c = d.data[d.pos]
-	switch {
-	case '0' <= c && c <= '9':
-		n = 10*n + float64(c-'0')
-		wantNumber = false
-	case (c == 'E' || c == 'e') && !hasE && !wantNumber:
-		hasE = true
-		if c = d.peek(); c == '+' || c == '-' {
-			d.pos++
-		}
-		fallthrough
-	case c == '.' && !hasDot && !wantNumber:
-		hasDot = true
-		wantNumber = true
-	default:
-		// if we're done
-		if !wantNumber {
-			goto exit
-		}
-		return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
-	}
 
-	d.pos++
-	if d.pos < d.end {
-		goto scan
+scan:
+	for d.pos < d.end {
+		c = d.data[d.pos]
+		switch {
+		case '0' <= c && c <= '9':
+			n = 10*n + float64(c-'0')
+			wantNumber = false
+		case (c == 'E' || c == 'e') && !hasE && !wantNumber:
+			hasE = true
+			if c = d.peek(); c == '+' || c == '-' {
+				d.pos++
+			}
+			fallthrough
+		case c == '.' && !hasDot && !wantNumber:
+			hasDot = true
+			wantNumber = true
+		default:
+			// if we're done
+			if !wantNumber {
+				break scan
+			}
+			return 0, &SyntaxError{"invalid number literal, trying to decode " + string(d.data[start:d.pos]) + " into Number", d.pos}
+		}
+		d.pos++
 	}
-exit:
 
 	if hasDot {
 		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
@@ -225,7 +198,11 @@ exit:
 	return n, nil
 }
 
+// array accept valid JSON array value
 func (d *decoder) array() ([]interface{}, error) {
+	// the '[' token already scanned
+	d.pos++
+
 	var (
 		c     byte
 		v     interface{}
@@ -233,24 +210,21 @@ func (d *decoder) array() ([]interface{}, error) {
 		array = make([]interface{}, 0)
 	)
 
-	d.pos++
-
-scan:
-	c = d.skipSpaces()
-	if c == ']' {
+	// look ahead for ] - if the array is empty.
+	if c = d.skipSpaces(); c == ']' {
 		d.pos++
-		goto exit
+		goto out
 	}
 
-	// read value
+scan:
 	if v, err = d.any(); err != nil {
-		goto exit
+		goto out
 	}
 
 	array = append(array, v)
 
-	c = d.skipSpaces()
-	if c == ',' {
+	// next token must be ',' or ']'
+	if c = d.skipSpaces(); c == ',' {
 		d.pos++
 		goto scan
 	} else if c == ']' {
@@ -259,11 +233,15 @@ scan:
 		err = d.error(c, "after array element")
 	}
 
-exit:
+out:
 	return array, err
 }
 
+// object accept valid JSON array value
 func (d *decoder) object() (map[string]interface{}, error) {
+	// the '{' token already scanned
+	d.pos++
+
 	var (
 		c   byte
 		k   string
@@ -271,17 +249,16 @@ func (d *decoder) object() (map[string]interface{}, error) {
 		err error
 		obj = make(map[string]interface{})
 	)
-	// '{' already scanned
-	d.pos++
-	for {
-		c = d.skipSpaces()
-		if c == '}' {
-			d.pos++
-			return obj, nil
-		}
 
-		// expecting for key
-		if c != '"' {
+	// look ahead for } - if the object has no keys.
+	if c = d.skipSpaces(); c == '}' {
+		d.pos++
+		return obj, nil
+	}
+
+	for {
+		// read string key
+		if c = d.skipSpaces(); c != '"' {
 			err = d.error(c, "looking for beginning of object key string")
 			break
 		}
@@ -289,7 +266,7 @@ func (d *decoder) object() (map[string]interface{}, error) {
 			break
 		}
 
-		// expecting for colon
+		// read colon before value
 		c = d.skipSpaces()
 		if c != ':' {
 			err = d.error(c, "after object key")
@@ -297,16 +274,15 @@ func (d *decoder) object() (map[string]interface{}, error) {
 		}
 		d.pos++
 
-		// read value
+		// read and assign value
 		if v, err = d.any(); err != nil {
 			break
 		}
 
 		obj[k] = v
 
-		c = d.skipSpaces()
-		// comma or object close
-		if c == '}' {
+		// next token must be ',' or '}'
+		if c = d.skipSpaces(); c == '}' {
 			d.pos++
 			break
 		} else if c == ',' {
@@ -320,8 +296,6 @@ func (d *decoder) object() (map[string]interface{}, error) {
 	return obj, err
 }
 
-// TODO: maybe is better to return -1 as end; or (c, ok)
-// and do conversion
 func (d *decoder) peek() byte {
 	if d.pos < d.end-1 {
 		return d.data[d.pos+1]
@@ -357,157 +331,15 @@ func (d *decoder) error(c byte, context string) error {
 	return &SyntaxError{"invalid character " + quoteChar(c) + " " + context, d.pos + 1}
 }
 
-// quoteChar formats c as a quoted character literal
-func quoteChar(c byte) string {
-	// special cases - different from quoted strings
-	if c == '\'' {
-		return `'\''`
-	}
-	if c == '"' {
-		return `'"'`
-	}
-
-	// use quoted string with different quotation marks
-	s := strconv.Quote(string(c))
-	return "'" + s[1:len(s)-1] + "'"
+// literal
+type literal struct {
+	name  string
+	bytes []byte
+	val   interface{}
 }
 
-func unquoteBytes(s, b []byte) (t []byte, ok bool) {
-	if len(s) == 0 {
-		return t, true
-	}
-	// Check for unusual characters. If there are none,
-	// then no unquoting is needed, so return a slice of the
-	// original bytes.
-	r := 0
-	for r < len(s) {
-		c := s[r]
-		if c == '\\' || c == '"' || c < ' ' {
-			break
-		}
-		if c < utf8.RuneSelf {
-			r++
-			continue
-		}
-		rr, size := utf8.DecodeRune(s[r:])
-		if rr == utf8.RuneError && size == 1 {
-			break
-		}
-		r += size
-	}
-	if r == len(s) {
-		return s, true
-	}
-
-	if cap(b) < len(s) {
-		b = make([]byte, len(s)+2*utf8.UTFMax)
-	}
-	w := copy(b, s[0:r])
-	for r < len(s) {
-		// Out of room?  Can only happen if s is full of
-		// malformed UTF-8 and we're replacing each
-		// byte with RuneError.
-		if w >= len(b)-2*utf8.UTFMax {
-			nb := make([]byte, (len(b)+utf8.UTFMax)*2)
-			copy(nb, b[0:w])
-			b = nb
-		}
-		switch c := s[r]; {
-		case c == '\\':
-			r++
-			if r >= len(s) {
-				return
-			}
-			switch s[r] {
-			default:
-				return
-			case '"', '\\', '/', '\'':
-				b[w] = s[r]
-				r++
-				w++
-			case 'b':
-				b[w] = '\b'
-				r++
-				w++
-			case 'f':
-				b[w] = '\f'
-				r++
-				w++
-			case 'n':
-				b[w] = '\n'
-				r++
-				w++
-			case 'r':
-				b[w] = '\r'
-				r++
-				w++
-			case 't':
-				b[w] = '\t'
-				r++
-				w++
-			case 'u':
-				r--
-				rr := getu4(s[r:])
-				if rr < 0 {
-					return
-				}
-				r += 6
-				if utf16.IsSurrogate(rr) {
-					rr1 := getu4(s[r:])
-					if dec := utf16.DecodeRune(rr, rr1); dec != unicode.ReplacementChar {
-						// A valid pair; consume.
-						r += 6
-						w += utf8.EncodeRune(b[w:], dec)
-						break
-					}
-					// Invalid surrogate; fall back to replacement rune.
-					rr = unicode.ReplacementChar
-				}
-				w += utf8.EncodeRune(b[w:], rr)
-			}
-
-		// Quote, control characters are invalid.
-		case c == '"', c < ' ':
-			return
-
-		// ASCII
-		case c < utf8.RuneSelf:
-			b[w] = c
-			r++
-			w++
-
-		// Coerce to well-formed UTF-8.
-		default:
-			rr, size := utf8.DecodeRune(s[r:])
-			r += size
-			w += utf8.EncodeRune(b[w:], rr)
-		}
-	}
-	return b[0:w], true
-}
-
-// getu4 decodes \uXXXX from the beginning of s, returning the hex value,
-// or it returns -1.
-func getu4(s []byte) rune {
-	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
-		return -1
-	}
-
-	// logic taken from:
-	// github.com/buger/jsonparser/blob/master/escape.go#L20
-	var h [4]int
-	for i := range h {
-		c := s[2+i]
-		switch {
-		case c >= '0' && c <= '9':
-			h[i] = int(c - '0')
-		case c >= 'A' && c <= 'F':
-			h[i] = int(c - 'A' + 10)
-		case c >= 'a' && c <= 'f':
-			h[i] = int(c - 'a' + 10)
-		default:
-			return -1
-		}
-	}
-	return rune(h[0]<<12 + h[1]<<8 + h[2]<<4 + h[3])
-}
+var (
+	litNull  = &literal{"null", []byte("ull"), nil}
+	litTrue  = &literal{"true", []byte("rue"), true}
+	litFalse = &literal{"false", []byte("alse"), false}
+)
