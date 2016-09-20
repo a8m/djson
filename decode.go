@@ -306,21 +306,13 @@ func (d *decoder) object() (map[string]interface{}, error) {
 	return obj, err
 }
 
-// peek returns but does not consume the next byte in the input.
-func (d *decoder) peek() byte {
-	if d.pos < d.end-1 {
-		return d.data[d.pos+1]
-	}
-	return 0
-}
-
 // next return the next byte in the input
 func (d *decoder) next() byte {
-	c := d.peek()
+	d.pos++
 	if d.pos < d.end {
-		d.pos++
+		return d.data[d.pos]
 	}
-	return c
+	return 0
 }
 
 // returns the next char after white spaces
