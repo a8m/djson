@@ -239,3 +239,22 @@ func TestDecodeObject(t *testing.T) {
 		}
 	}
 }
+
+func TestType(t *testing.T) {
+	var tests = map[ValueType]string{
+		Null:   "null",
+		Bool:   "true",
+		String: "\"string\"",
+		Number: "123",
+		Object: "{}",
+		Array:  "[]",
+	}
+	for k, v := range tests {
+		t.Run(k.String(), func(t *testing.T) {
+			vv, _ := Decode([]byte(v))
+			if vt := Type(vv); vt != k {
+				t.Errorf("Type(%s) = %q; want %q", k, vt, k)
+			}
+		})
+	}
+}
