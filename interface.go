@@ -64,7 +64,22 @@ func Type(v interface{}) ValueType {
 	return t
 }
 
-// Decode is the exported method to decode arbitrary data into Value object.
+// Decode parses the JSON-encoded data and returns an interface value.
+// The interface value could be one of these:
+//
+//	bool, for JSON booleans
+//	float64, for JSON numbers
+//	string, for JSON strings
+//	[]interface{}, for JSON arrays
+//	map[string]interface{}, for JSON objects
+//	nil for JSON null
+//
+// Note that the Decode is compatible with the the following
+// insructions:
+//
+//	var v interface{}
+//	err := json.Unmarshal(data, &v)
+//
 func Decode(data []byte) (interface{}, error) {
 	d := newDecoder(data)
 	val, err := d.any()
@@ -77,7 +92,8 @@ func Decode(data []byte) (interface{}, error) {
 	return val, nil
 }
 
-// Decode is the exported method to decode arbitrary data into Value object.
+// DecodeObject is the same as Decode but it returns map[string]interface{}.
+// You should use it to parse JSON objects.
 func DecodeObject(data []byte) (map[string]interface{}, error) {
 	d := newDecoder(data)
 	if c := d.skipSpaces(); c != '{' {
@@ -93,7 +109,8 @@ func DecodeObject(data []byte) (map[string]interface{}, error) {
 	return val, nil
 }
 
-// Decode is the exported method to decode arbitrary data into Value object.
+// DecodeArray is the same as Decode but it returns []interface{}.
+// You should use it to parse JSON arrays.
 func DecodeArray(data []byte) ([]interface{}, error) {
 	d := newDecoder(data)
 	if c := d.skipSpaces(); c != '[' {

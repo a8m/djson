@@ -196,6 +196,8 @@ func (d *decoder) number(neg bool) (float64, error) {
 	}
 
 	if isFloat {
+		// TODO(a8m): implement `ParseFloatBytes` mehtod, to avoid
+		// memory allocation
 		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
 		if err != nil {
 			return 0, err
