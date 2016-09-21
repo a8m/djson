@@ -22,51 +22,39 @@ func newDecoder(data []byte) *decoder {
 // any used to decode any valid JSON value, and returns an
 // interface{} that holds the actual data
 func (d *decoder) any() (interface{}, error) {
-	var (
-		err error
-		lit *literal
-		val interface{}
-	)
-
 	switch c := d.skipSpaces(); c {
-	case 'f':
-		lit = litFalse
-	case 't':
-		lit = litTrue
-	case 'n':
-		lit = litNull
-	case '[':
-		val, err = d.array()
-	case '{':
-		val, err = d.object()
-	case '"':
-		val, err = d.string()
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
-		val, err = d.number(c == '-')
+		return d.number(c == '-')
+	case '"':
+		return d.string()
+	case 'f':
+		d.pos++
+		if i := d.pos; d.data[i] == 'a' && d.data[i+1] == 'l' && d.data[i+2] == 's' && d.data[i+3] == 'e' {
+			d.pos += 4
+			return false, nil
+		}
+		return nil, d.error(d.data[d.pos], "in literal false")
+	case 't':
+		d.pos++
+		if i := d.pos; d.data[i] == 'r' && d.data[i+1] == 'u' && d.data[i+2] == 'e' {
+			d.pos += 3
+			return true, nil
+		}
+		return nil, d.error(d.data[d.pos], "in literal true")
+	case 'n':
+		d.pos++
+		if i := d.pos; d.data[i] == 'u' && d.data[i+1] == 'l' && d.data[i+2] == 'l' {
+			d.pos += 3
+			return nil, nil
+		}
+		return nil, d.error(d.data[d.pos], "in literal null")
+	case '[':
+		return d.array()
+	case '{':
+		return d.object()
 	default:
 		return nil, d.error(c, "looking for beginning of value")
 	}
-
-	// if we encounter a start of literal, we consume the literal string,
-	// while expect it to be equal to the literal variables above, and then
-	// decode it into the value v.
-	if lit != nil {
-		d.pos++
-		for i, c := range lit.bytes {
-			if nc := d.data[d.pos+i]; nc != c {
-				err = d.error(nc, "in literal "+lit.name+"(expecting '"+string(c)+"')")
-				break
-			}
-		}
-		d.pos += len(lit.bytes)
-		val = lit.val
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return val, nil
 }
 
 // string called by `any` or `object`(for map keys) after reading `"`
@@ -339,16 +327,3 @@ func (d *decoder) error(c byte, context string) error {
 	}
 	return ErrUnexpectedEOF
 }
-
-// literal
-type literal struct {
-	name  string
-	bytes []byte
-	val   interface{}
-}
-
-var (
-	litNull  = &literal{"null", []byte("ull"), nil}
-	litTrue  = &literal{"true", []byte("rue"), true}
-	litFalse = &literal{"false", []byte("alse"), false}
-)
