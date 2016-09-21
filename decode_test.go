@@ -95,99 +95,87 @@ func TestDecode(t *testing.T) {
 }
 
 var allValueIndent = []byte(`{
-	"Bool": true,
-	"Int": 2,
-	"Int8": 3,
-	"Int16": 4,
-	"Int32": 5,
-	"Int64": 6,
-	"Uint": 7,
-	"Uint8": 8,
-	"Uint16": 9,
-	"Uint32": 10,
-	"Uint64": 11,
-	"Uintptr": 12,
-	"Float32": 14.1,
-	"Float64": 15.1,
-	"bar": "foo",
-	"bar2": "foo2",
-	"IntStr": "42",
-	"PBool": null,
-	"PInt": null,
-	"PInt8": null,
-	"PInt16": null,
-	"PInt32": null,
-	"PInt64": null,
-	"PUint": null,
-	"PUint8": null,
-	"PUint16": null,
-	"PUint32": null,
-	"PUint64": null,
-	"PUintptr": null,
-	"PFloat32": null,
-	"PFloat64": null,
-	"String": "16",
-	"PString": null,
-	"Map": {
-		"17": {
-			"Tag": "tag17"
-		},
-		"18": {
-			"Tag": "tag18"
+	"null_1": null,
+	"null_2":     null,
+	"null_3":null       ,
+
+	"bool_1": false,
+	"bool_2": true,
+	"bool_3":         false,
+	"bool_4":true        ,
+
+	"string_1": "This is a string",
+	"string_2": "Déjà vu",
+	"string_3": "",
+	"string_4": "null",
+	"string_5": "5",
+	"string_6": "\"foobar\"<html> [\u2028 \u2029]",
+
+	"int_1": 42,
+	"int_2": -1,
+	"int_3": 11111111,
+	"float_1": 3.1415926,
+	"float_2": -0.1415926,
+	"float_3": 0.1415926,
+	"float_4": 2.99792458e8,
+	"float_5": 7.71234e+1,
+	"float_6": 1.234e-1,
+	"float_7": 1.234e-1      ,
+	"float_8":     1.234e-1,
+
+	"array_1": [],
+	"array_2": [2,3,4,4],
+	"array_3": [2, "a", "3", "v", true, false],
+	"array_4": [[], ["a", "d"], [[[false]]]],
+	"array_5": [{"a": 1}, {"d": 2}, "d", "d", "s", "a", 3, 3],
+	"array_5": [{"a": 1}, {"d": 2}, "d", "d", "s", "a", 3, {
+		"array_5_1": [
+			{
+				"array_5_1_1": ["a", "b", "c", "d"],
+				"array_5_1_2": [1,2,2,3,4,5,5,6,0,7,7]
+			}
+		]
+	}],
+
+	"object_1": {},
+	"object_2": {"a": 1},
+	"object_3": {"a": 1, "b": 3},
+	"object_4": {"a": 1, "c": { "d"     : "d", "f":            2}},
+	"object_5": {"a": 1, "s": "{}", "ss": "{\"ss\": 2}" },
+	"object_6": {
+		"a": 2,
+		"b": "a",
+		"c": {
+			"ca": 2,
+			"cb": "a",
+			"cc": {
+				"cca": [1,2,3,4,5,6,true, false, "a"],
+				"ccb": [],
+				"ccc": "[]",
+				"ccd": {
+					"ccda": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			}
 		}
-	},
-	"MapP": {
-		"19": {
-			"Tag": "tag19"
-		},
-		"20": null
-	},
-	"PMap": null,
-	"PMapP": null,
-	"EmptyMap": {},
-	"NilMap": null,
-	"Slice": [
-		{
-			"Tag": "tag20"
-		},
-		{
-			"Tag": "tag21"
-		}
-	],
-	"SliceP": [
-		{
-			"Tag": "tag22"
-		},
-		null,
-		{
-			"Tag": "tag23"
-		}
-	],
-	"PSlice": null,
-	"PSliceP": null,
-	"EmptySlice": [],
-	"NilSlice": null,
-	"StringSlice": [
-		"str24",
-		"str25",
-		"str26"
-	],
-	"ByteSlice": "Gxwd",
-	"Small": {
-		"Tag": "tag30"
-	},
-	"PSmall": {
-		"Tag": "tag31"
-	},
-	"PPSmall": null,
-	"Interface": 5.2,
-	"PInterface": null
+	}
 }`)
 
 func TestWithStdDecoder(t *testing.T) {
 	expected := make(map[string]interface{})
-	json.Unmarshal(allValueIndent, &expected)
-	out, _ := Decode(allValueIndent)
+	if err := json.Unmarshal(allValueIndent, &expected); err != nil {
+		t.Errorf("expecting std json not to fail: %q", err)
+	}
+	out, err := Decode(allValueIndent)
+	if err != nil {
+		t.Errorf("expecting decode not to fail: %q", err)
+	}
 	if actual := out.(map[string]interface{}); !reflect.DeepEqual(actual, expected) {
 		t.Errorf("compare to std unmarshaler \n\tactual: %v\n\twant: %v", actual, expected)
 

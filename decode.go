@@ -189,9 +189,9 @@ func (d *decoder) number(neg bool) (float64, error) {
 			if c = d.next(); c < '0' || c > '9' {
 				return 0, d.error(c, "in exponent of numeric literal")
 			}
-			for c = d.next(); '0' <= c && c <= '9'; {
-				c = d.next()
-			}
+		}
+		for c = d.next(); '0' <= c && c <= '9'; {
+			c = d.next()
 		}
 	}
 
