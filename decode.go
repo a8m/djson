@@ -29,6 +29,9 @@ func (d *decoder) any() (interface{}, error) {
 		return d.string()
 	case 'f':
 		d.pos++
+		if d.end-d.pos < 4 {
+			return nil, ErrUnexpectedEOF
+		}
 		if i := d.pos; d.data[i] == 'a' && d.data[i+1] == 'l' && d.data[i+2] == 's' && d.data[i+3] == 'e' {
 			d.pos += 4
 			return false, nil
@@ -36,6 +39,9 @@ func (d *decoder) any() (interface{}, error) {
 		return nil, d.error(d.data[d.pos], "in literal false")
 	case 't':
 		d.pos++
+		if d.end-d.pos < 3 {
+			return nil, ErrUnexpectedEOF
+		}
 		if i := d.pos; d.data[i] == 'r' && d.data[i+1] == 'u' && d.data[i+2] == 'e' {
 			d.pos += 3
 			return true, nil
@@ -43,6 +49,9 @@ func (d *decoder) any() (interface{}, error) {
 		return nil, d.error(d.data[d.pos], "in literal true")
 	case 'n':
 		d.pos++
+		if d.end-d.pos < 3 {
+			return nil, ErrUnexpectedEOF
+		}
 		if i := d.pos; d.data[i] == 'u' && d.data[i+1] == 'l' && d.data[i+2] == 'l' {
 			d.pos += 3
 			return nil, nil

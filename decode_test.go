@@ -46,6 +46,13 @@ var decodeTests = []decodeTest{
 	{in: "\t -5 \n", expected: float64(-5)},
 	{in: "\t \"a\\u1234\" \n", expected: "a\u1234"},
 
+	// EOF errors
+	{in: `fal`, err: ErrUnexpectedEOF},
+	{in: `nul`, err: ErrUnexpectedEOF},
+	{in: `tru`, err: ErrUnexpectedEOF},
+	{in: `"as`, err: ErrUnexpectedEOF},
+	{in: `[1,`, err: ErrUnexpectedEOF},
+
 	// syntax errors
 	{in: `{"X": "foo", "Y"}`, err: &SyntaxError{"invalid character '}' after object key", 17}},
 	{in: `[1, 2, 3+]`, err: &SyntaxError{"invalid character '+' after array element", 9}},
