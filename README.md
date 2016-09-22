@@ -1,7 +1,7 @@
 <p align="center">
 <img 
-    src="assets/logo.png" alt="DJSON">
-<br>
+    src="assets/logo.png" width="240" height="78" border="0" alt="DJSON">
+<br/><br/>
 <a href="https://godoc.org/github.com/a8m/djson"><img src="https://img.shields.io/badge/api-reference-blue.svg?style=flat-square" alt="GoDoc"></a>
 <a href="https://travis-ci.org/a8m/djson"><img src="https://img.shields.io/travis/a8m/djson.svg?style=flat-square"
 alt="Build Status"></a>
