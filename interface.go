@@ -12,10 +12,9 @@ func (e *SyntaxError) Error() string { return e.msg }
 
 // Predefined errors
 var (
-	// Syntax errors
 	ErrUnexpectedEOF    = &SyntaxError{"unexpected end of JSON input", -1}
 	ErrInvalidHexEscape = &SyntaxError{"invalid hexadecimal escape sequence", -1}
-	ErrStringEscape     = errors.New("djson: encountered an invalid escape sequence in a string")
+	ErrStringEscape     = &SyntaxError{"encountered an invalid escape sequence in a string", -1}
 )
 
 // ValueType identifies the type of a parsed value.
@@ -45,6 +44,7 @@ var types = map[ValueType]string{
 	Unknown: "unknown",
 }
 
+// Type returns the JSON-type of the given value
 func Type(v interface{}) ValueType {
 	t := Unknown
 	switch v.(type) {
