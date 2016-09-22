@@ -1,7 +1,5 @@
 package djson
 
-import "errors"
-
 // A SyntaxError is a description of a JSON syntax error.
 type SyntaxError struct {
 	msg    string // description of error
