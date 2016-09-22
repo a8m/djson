@@ -1,5 +1,12 @@
-# djson
-Fast Go decoder for dynamic JSON
+<p align="center">
+<img 
+    src="assets/logo.png" alt="DJSON">
+<br>
+<a href="https://godoc.org/github.com/a8m/djson"><img src="https://img.shields.io/badge/api-reference-blue.svg?style=flat-square" alt="GoDoc"></a>
+<a href="https://travis-ci.org/a8m/djson"><img src="https://img.shields.io/travis/a8m/djson.svg?style=flat-square"
+alt="Build Status"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="LICENSE"></a>
+</p>
 
 DJSON is a JSON decoder for Go that is 3~ times faster than
 the standard `encoding/json` and the existing solutions, when dealing with
@@ -37,8 +44,6 @@ if there are any issues or bug reports, to make it stable.
 compares to results to `encoding/json` - feel free to add more values if you find they are important)
 I'm also plaining to add the DecodeStream(io.ReaderCloser) method, to support stream decoding
 without breaking performance.
-
-
 
 
 
