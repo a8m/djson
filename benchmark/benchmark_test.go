@@ -33,6 +33,13 @@ func BenchmarkEncodingJsonParser(b *testing.B) {
 			json.Unmarshal(largeFixture, &data)
 		}
 	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			data := make(map[string]interface{})
+			json.Unmarshal(largeArrayFixture, &data)
+		}
+	})
 }
 
 func BenchmarkUgorjiParser(b *testing.B) {
@@ -59,6 +66,14 @@ func BenchmarkUgorjiParser(b *testing.B) {
 			decoder.Decode(&v)
 		}
 	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			decoder := codec.NewDecoderBytes(largeArrayFixture, new(codec.JsonHandle))
+			var v interface{}
+			decoder.Decode(&v)
+		}
+	})
 }
 
 func BenchmarkJasonParser(b *testing.B) {
@@ -77,6 +92,12 @@ func BenchmarkJasonParser(b *testing.B) {
 	b.Run("large", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			jason.NewObjectFromBytes(largeFixture)
+		}
+	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			jason.NewObjectFromBytes(largeArrayFixture)
 		}
 	})
 }
@@ -99,6 +120,12 @@ func BenchmarkSimpleJsonParser(b *testing.B) {
 			simplejson.NewJson(largeFixture)
 		}
 	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			simplejson.NewJson(largeArrayFixture)
+		}
+	})
 }
 
 func BenchmarkGabsParser(b *testing.B) {
@@ -117,6 +144,12 @@ func BenchmarkGabsParser(b *testing.B) {
 	b.Run("large", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			gabs.ParseJSON(largeFixture)
+		}
+	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			gabs.ParseJSON(largeArrayFixture)
 		}
 	})
 }
@@ -139,6 +172,12 @@ func BenchmarkUJsonParser(b *testing.B) {
 			ujson.NewFromBytes(largeFixture)
 		}
 	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ujson.NewFromBytes(largeArrayFixture)
+		}
+	})
 }
 
 func BenchmarkDJsonParser(b *testing.B) {
@@ -157,6 +196,12 @@ func BenchmarkDJsonParser(b *testing.B) {
 	b.Run("large", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			djson.DecodeObject(largeFixture)
+		}
+	})
+
+	b.Run("large_array", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			djson.DecodeObject(largeArrayFixture)
 		}
 	})
 }
