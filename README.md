@@ -18,7 +18,7 @@ want good performance with minimal changes.
 
 - Motivation
 While searching for a JSON parser solution for my projects, that is faster than the standard library(zero reflection tests)
-and allocates less memory but is still safe(I didn't want the "unsafe" package in my production code, in order to reduce memory allocations);
+and allocates less memory but is still safe(I didn't want the "unsafe" package in my production code, in order to reduce memory consumption);
 
 I found that almost all implemtations are just wrappers around the standard library
 and aren't fast enough for my needs;
