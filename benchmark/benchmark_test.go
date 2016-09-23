@@ -201,7 +201,7 @@ func BenchmarkDJsonParser(b *testing.B) {
 
 	b.Run("large_array", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			djson.DecodeObject(largeArrayFixture)
+			djson.DecodeArray(largeArrayFixture)
 		}
 	})
 }
