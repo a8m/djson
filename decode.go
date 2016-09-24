@@ -7,15 +7,34 @@ import (
 
 // decoder is the object that holds the state of the scaning
 type decoder struct {
-	data []byte
-	pos  int
-	end  int
+	data  []byte
+	sdata string
+	pos   int
+	end   int
 }
 
 func newDecoder(data []byte) *decoder {
 	return &decoder{
 		data: data,
-		end:  len(data),
+		// Add the string respresentation of the data. it is good because we do one
+		// allocation operation for string conversion(from bytes to string) and then
+		// use "slicing" to create strings in the string method.
+		// However, string is a read-only slice, and since the slice references the
+		// original array, as long as the slice is kept around the garbage collector
+		// can't release the array.
+		//
+		// Here is the improvements:
+		// small payload  - 0.13~ time faster, does 0.45~ less memory allocations but
+		//                  the total number of bytes that allocated is 0.03~ bigger
+		// medium payload - 0.16~ time faster, does 0.5~ less memory allocations but
+		//                  the total number of bytes that allocated is 0.05~ bigger
+		// large payload  - 0.13~ time faster, does 0.50~ less memory allocations but
+		//                  the total number of bytes that allocated is 0.02~ bigger
+		//
+		// I don't know if it's worth it, let's wait for the community feedbacks and
+		// then I'll see where I go from there.
+		sdata: string(data),
+		end:   len(data),
 	}
 }
 
@@ -32,7 +51,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 4 {
 			return nil, ErrUnexpectedEOF
 		}
-		if i := d.pos; d.data[i] == 'a' && d.data[i+1] == 'l' && d.data[i+2] == 's' && d.data[i+3] == 'e' {
+		if d.sdata[d.pos:d.pos+4] == "alse" {
 			d.pos += 4
 			return false, nil
 		}
@@ -42,7 +61,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 3 {
 			return nil, ErrUnexpectedEOF
 		}
-		if i := d.pos; d.data[i] == 'r' && d.data[i+1] == 'u' && d.data[i+2] == 'e' {
+		if d.sdata[d.pos:d.pos+3] == "rue" {
 			d.pos += 3
 			return true, nil
 		}
@@ -52,7 +71,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 3 {
 			return nil, ErrUnexpectedEOF
 		}
-		if i := d.pos; d.data[i] == 'u' && d.data[i+1] == 'l' && d.data[i+2] == 'l' {
+		if d.sdata[d.pos:d.pos+3] == "ull" {
 			d.pos += 3
 			return nil, nil
 		}
@@ -96,7 +115,7 @@ scan:
 				}
 				s = string(data)
 			} else {
-				s = string(d.data[start:d.pos])
+				s = d.sdata[start:d.pos]
 			}
 			d.pos++
 			return s, nil
@@ -193,9 +212,7 @@ func (d *decoder) number(neg bool) (float64, error) {
 	}
 
 	if isFloat {
-		// TODO(a8m): implement `ParseFloatBytes` mehtod, to avoid
-		// memory allocation
-		v, err := strconv.ParseFloat(string(d.data[start:d.pos]), 64)
+		v, err := strconv.ParseFloat(d.sdata[start:d.pos], 64)
 		if err != nil {
 			return 0, err
 		}
