@@ -36,7 +36,7 @@ func BenchmarkEncodingJsonParser(b *testing.B) {
 
 	b.Run("large_array", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			data := make(map[string]interface{})
+			data := make([]interface{}, 0)
 			json.Unmarshal(largeArrayFixture, &data)
 		}
 	})
@@ -208,7 +208,7 @@ func BenchmarkDJsonParser(b *testing.B) {
 
 /*
 // This is not part of the benchmark test cases;
-// Trying to show the preformence while translate the jsonparser's
+// Trying to show the preformence when translating the jsonparser's
 // result into map[string]interface{}
 // import "github.com/buger/jsonparser"
 func BenchmarkJsonparserParser(b *testing.B) {
