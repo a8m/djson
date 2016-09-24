@@ -42,10 +42,12 @@ func newDecoder(data []byte) *decoder {
 // interface{} that holds the actual data
 func (d *decoder) any() (interface{}, error) {
 	switch c := d.skipSpaces(); c {
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
-		return d.number(c == '-')
 	case '"':
 		return d.string()
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		return d.number(false)
+	case '-':
+		return d.number(true)
 	case 'f':
 		d.pos++
 		if d.end-d.pos < 4 {
