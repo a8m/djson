@@ -53,7 +53,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 4 {
 			return nil, ErrUnexpectedEOF
 		}
-		if d.sdata[d.pos:d.pos+4] == "alse" {
+		if d.data[d.pos] == 'a' && d.data[d.pos+1] == 'l' && d.data[d.pos+2] == 's' && d.data[d.pos+3] == 'e' {
 			d.pos += 4
 			return false, nil
 		}
@@ -63,7 +63,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 3 {
 			return nil, ErrUnexpectedEOF
 		}
-		if d.sdata[d.pos:d.pos+3] == "rue" {
+		if d.data[d.pos] == 'r' && d.data[d.pos+1] == 'u' && d.data[d.pos+2] == 'e' {
 			d.pos += 3
 			return true, nil
 		}
@@ -73,7 +73,7 @@ func (d *decoder) any() (interface{}, error) {
 		if d.end-d.pos < 3 {
 			return nil, ErrUnexpectedEOF
 		}
-		if d.sdata[d.pos:d.pos+3] == "ull" {
+		if d.data[d.pos] == 'u' && d.data[d.pos+1] == 'l' && d.data[d.pos+2] == 'l' {
 			d.pos += 3
 			return nil, nil
 		}
