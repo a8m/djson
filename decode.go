@@ -16,9 +16,9 @@ type decoder struct {
 func newDecoder(data []byte) *decoder {
 	return &decoder{
 		data: data,
-		// Add the string respresentation of the data. it is good because we do one
-		// allocation operation for string conversion(from bytes to string) and then
-		// use "slicing" to create strings in the string method.
+		// Add a string version of the data. it is good because we do one allocation
+		// operation for string conversion(from bytes to string) and then
+		// use "slicing" to create strings in the "decoder.string" method.
 		// However, string is a read-only slice, and since the slice references the
 		// original array, as long as the slice is kept around the garbage collector
 		// can't release the array.
