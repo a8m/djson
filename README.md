@@ -59,31 +59,49 @@ Compared libraries:
 - https://github.com/ugorji/go/codec
 
 #### small payload
-The small fixture payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L3),
+The small payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L3),
 and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_small.png)
 
-| __Library__            | __Time/op__   | __B/op__ | __allocs/op__ |
-|------------------------|-------------- |----------|---------------|
-| encoding/json          |    8646       |   1993   |   60          |
-| ugorji/go/codec        |    9272       |   4513   |   __41__      |
-| antonholmquist/jason   |    __7336__   |   3201   |   __49__      |
-| bitly/go-simplejson    |    __5253__   |   2241   |   __36__      |
-| Jeffail/gabs           |    __4788__   | __1409__ |   __33__      |
-| mreiferson/go-ujson    |    __3897__   | __1393__ |   __35__      |
-| a8m/djson              |    __2534__   | __1137__ |   __25__      |
-| a8m/djson.AllocString  |    __2195__   | __1169__ |   __13__      |
+| __Library__                 | __Time/op__   | __B/op__ | __allocs/op__ |
+|-----------------------------|-------------- |----------|---------------|
+| encoding/json               |    8646       |   1993   |   60          |
+| ugorji/go/codec             |    9272       |   4513   |   __41__      |
+| antonholmquist/jason        |    __7336__   |   3201   |   __49__      |
+| bitly/go-simplejson         |    __5253__   |   2241   |   __36__      |
+| Jeffail/gabs                |    __4788__   | __1409__ |   __33__      |
+| mreiferson/go-ujson         |    __3897__   | __1393__ |   __35__      |
+| a8m/djson                   |    __2534__   | __1137__ |   __25__      |
+| a8m/djson.[AllocString][as] |    __2195__   | __1169__ |   __13__      |
 
 #### medium payload
-The medium fixture payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L5),
+The medium payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L5),
 and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_medium.png)
 
-| __Library__            | __Time/op__    | __B/op__ | __allocs/op__  |
-|------------------------|----------------|-----------|---------------|
-| encoding/json          |    42029       |   10652   |   218         |
-| ugorji/go/codec        |    65007       |   15267   |   313         |
-| antonholmquist/jason   |    45676       |   17476   |   224         |
-| bitly/go-simplejson    |    45164       |   17156   |   219         |
-| Jeffail/gabs           |    __41045__   | __10515__ |   __211__     |
-| mreiferson/go-ujson    |    __33213__   |   11506   |   267         |
-| a8m/djson              |    __22871__   | __10100__ |   __195__     |
-| a8m/djson.AllocString  |    __19296__   | __10619__ |   __87__      |
+| __Library__                  | __Time/op__    | __B/op__ | __allocs/op__  |
+|------------------------------|----------------|-----------|---------------|
+| encoding/json                |    42029       |   10652   |   218         |
+| ugorji/go/codec              |    65007       |   15267   |   313         |
+| antonholmquist/jason         |    45676       |   17476   |   224         |
+| bitly/go-simplejson          |    45164       |   17156   |   219         |
+| Jeffail/gabs                 |    __41045__   | __10515__ |   __211__     |
+| mreiferson/go-ujson          |    __33213__   |   11506   |   267         |
+| a8m/djson                    |    __22871__   | __10100__ |   __195__     |
+| a8m/djson.[AllocString][as]  |    __19296__   | __10619__ |   __87__      |
+
+#### large payload
+The large payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L7),
+and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_large.png)
+
+| __Library__                 | __Time/op__    | __B/op__   | __allocs/op__  |
+|-----------------------------|----------------|------------|----------------|
+| encoding/json               |    717882      |   212827   |   3247         |
+| ugorji/go/codec             |    1052347     |   239130   |   4426         |
+| antonholmquist/jason        |    751910      |   277931   |   3257         |
+| bitly/go-simplejson         |    753663      |   277628   |   3252         |
+| Jeffail/gabs                |    __714304__  | __212740__ |   __3241__     |
+| mreiferson/go-ujson         |    __599868__  |   235789   |   4057         |
+| a8m/djson                   |    __437031__  | __210997__ |   __2932__     |
+| a8m/djson.[AllocString][as] |    __372382__  |   214053   |   __1413__     |
+
+
+[as]: https://github.com/a8m/djson/blob/master/decode.go#L25
