@@ -161,6 +161,32 @@ func BenchmarkDJsonParser(b *testing.B) {
 	})
 }
 
+func BenchmarkDJsonAllocString(b *testing.B) {
+	b.Run("small", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			dec := djson.NewDecoder(smallFixture)
+			dec.AllocString()
+			dec.DecodeObject()
+		}
+	})
+
+	b.Run("medium", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			dec := djson.NewDecoder(mediumFixture)
+			dec.AllocString()
+			dec.DecodeObject()
+		}
+	})
+
+	b.Run("large", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			dec := djson.NewDecoder(largeFixture)
+			dec.AllocString()
+			dec.DecodeObject()
+		}
+	})
+}
+
 /*
 // This is not part of the benchmark test cases;
 // Trying to show the preformence when translating the jsonparser's
