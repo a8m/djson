@@ -50,3 +50,22 @@ Bench result that is better than the standard `encoding/json` marked in bold tex
 Benchmarks run on AWS EC2 instance(c4.xlarge). see: [screenshots](link
 to screenshot in assets)
 
+Compared libraries:
+- https://golang.org/pkg/encoding/json
+- https://github.com/Jeffail/gabs
+- https://github.com/bitly/go-simplejson
+- https://github.com/antonholmquist/jason
+- https://github.com/mreiferson/go-ujson
+- https://github.com/ugorji/go/codec
+
+#### small payload
+| __Library__            | __Time/op__   | __B/op__ | __allocs/op__ |
+|------------------------|-------------- |----------|---------------|
+| encoding/json          |    8646       |   1993   |   60          |
+| ugorji/go/codec        |    9272       |   4513   |   41          |
+| antonholmquist/jason   |    __7336__   |   3201   |   __49__      |
+| bitly/go-simplejson    |    __5253__   |   2241   |   __36__      |
+| Jeffail/gabs           |    __4788__   | __1409__ |   __33__      |
+| mreiferson/go-ujson    |    __3897__   | __1393__ |   __35__      |
+| a8m/djson              |    __2534__   | __1137__ |   __25__      |
+| a8m/djson.AllocString  |    __2195__   | __1169__ |   __13__      |
