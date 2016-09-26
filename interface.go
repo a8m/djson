@@ -79,7 +79,7 @@ func Type(v interface{}) ValueType {
 //	err := json.Unmarshal(data, &v)
 //
 func Decode(data []byte) (interface{}, error) {
-	d := newDecoder(data)
+	d := NewDecoder(data)
 	val, err := d.any()
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func Decode(data []byte) (interface{}, error) {
 // DecodeObject is the same as Decode but it returns map[string]interface{}.
 // You should use it to parse JSON objects.
 func DecodeObject(data []byte) (map[string]interface{}, error) {
-	d := newDecoder(data)
+	d := NewDecoder(data)
 	if c := d.skipSpaces(); c != '{' {
 		return nil, d.error(c, "looking for beginning of object")
 	}
@@ -110,7 +110,7 @@ func DecodeObject(data []byte) (map[string]interface{}, error) {
 // DecodeArray is the same as Decode but it returns []interface{}.
 // You should use it to parse JSON arrays.
 func DecodeArray(data []byte) ([]interface{}, error) {
-	d := newDecoder(data)
+	d := NewDecoder(data)
 	if c := d.skipSpaces(); c != '[' {
 		return nil, d.error(c, "looking for beginning of array")
 	}
@@ -123,3 +123,7 @@ func DecodeArray(data []byte) ([]interface{}, error) {
 	}
 	return val, nil
 }
+
+// TODO(a8m): the 3 methods above could be written like this:
+//
+// 	return NewDecoder(data).DecodeXXX()

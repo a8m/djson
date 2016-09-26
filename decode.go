@@ -5,42 +5,126 @@ import (
 	"unicode"
 )
 
-// decoder is the object that holds the state of the scaning
-type decoder struct {
-	data  []byte
-	sdata string
-	pos   int
-	end   int
+// Decoder is the object that holds the state of the decoding
+type Decoder struct {
+	pos       int
+	end       int
+	data      []byte
+	sdata     string
+	usestring bool
 }
 
-func newDecoder(data []byte) *decoder {
-	return &decoder{
+// NewDecoder creates new Decoder from the JSON-encoded data
+func NewDecoder(data []byte) *Decoder {
+	return &Decoder{
 		data: data,
-		// Add a string version of the data. it is good because we do one allocation
-		// operation for string conversion(from bytes to string) and then
-		// use "slicing" to create strings in the "decoder.string" method.
-		// However, string is a read-only slice, and since the slice references the
-		// original array, as long as the slice is kept around the garbage collector
-		// can't release the array.
-		//
-		// Here is the improvements:
-		// small payload  - 0.13~ time faster, does 0.45~ less memory allocations but
-		//                  the total number of bytes that allocated is 0.03~ bigger
-		// medium payload - 0.16~ time faster, does 0.5~ less memory allocations but
-		//                  the total number of bytes that allocated is 0.05~ bigger
-		// large payload  - 0.13~ time faster, does 0.50~ less memory allocations but
-		//                  the total number of bytes that allocated is 0.02~ bigger
-		//
-		// I don't know if it's worth it, let's wait for the community feedbacks and
-		// then I'll see where I go from there.
-		sdata: string(data),
-		end:   len(data),
+		end:  len(data),
 	}
+}
+
+// AllocString pre-allocate a string version of the data before starting
+// decoding.
+// It is used to make the decode operation more fast(see below) by doing one
+// allocation operation for string conversion(from bytes), and then use
+// "slicing" to create non-escaped strings in the "Decoder.string" method.
+// However, string is a read-only slice, and since the slice references the
+// original array, as long as the slice is kept around, the garbage collector
+// can't release the array.
+// For this reason, you want to use this method only when the Decoder's result
+// is a "read-only" or you are adding more elements to it. see example below.
+//
+// Here are the improvements:
+//
+//	small payload  - 0.13~ time faster, does 0.45~ less memory allocations but
+// 			 the total number of bytes that are allocated is 0.03~ bigger
+//
+// 	medium payload - 0.16~ time faster, does 0.5~ less memory allocations but
+// 			 the total number of bytes that are allocated is 0.05~ bigger
+//
+// 	large payload  - 0.13~ time faster, does 0.50~ less memory allocations but
+// 			 the total number of bytes that are allocated is 0.02~ bigger
+//
+// Here is an example to illustrate when you don't want to use this method
+//
+// 	str := fmt.Sprintf(`{"foo": "bar", "baz": "%s"}`, strings.Repeat("#", 1024 * 1024))
+//	dec := djson.NewDecoder([]byte(str))
+// 	dec.AllocString()
+// 	ev, err := dec.DecodeObject()
+//
+// 	// inpect memory stats here; MemStats.Alloc ~= 1M
+//
+// 	delete(ev, "baz") // or ev["baz"] = "qux"
+//
+// 	// inpect memory stats again; MemStats.Alloc ~= 1M
+// 	// it means that the chunk that sat in the "baz" value is not freed
+//
+func (d *Decoder) AllocString() {
+	d.sdata = string(d.data)
+	d.usestring = true
+}
+
+// Decode parses the JSON-encoded data and returns an interface value.
+// The interface value could be one of these:
+//
+//	bool, for JSON booleans
+//	float64, for JSON numbers
+//	string, for JSON strings
+//	[]interface{}, for JSON arrays
+//	map[string]interface{}, for JSON objects
+//	nil for JSON null
+//
+// Note that the Decode is compatible with the the following
+// insructions:
+//
+//	var v interface{}
+//	err := json.Unmarshal(data, &v)
+//
+func (d *Decoder) Decode() (interface{}, error) {
+	val, err := d.any()
+	if err != nil {
+		return nil, err
+	}
+	if c := d.skipSpaces(); d.pos < d.end {
+		return nil, d.error(c, "after top-level value")
+	}
+	return val, nil
+}
+
+// DecodeObject is the same as Decode but it returns map[string]interface{}.
+// You should use it to parse JSON objects.
+func (d *Decoder) DecodeObject() (map[string]interface{}, error) {
+	if c := d.skipSpaces(); c != '{' {
+		return nil, d.error(c, "looking for beginning of object")
+	}
+	val, err := d.object()
+	if err != nil {
+		return nil, err
+	}
+	if c := d.skipSpaces(); d.pos < d.end {
+		return nil, d.error(c, "after top-level value")
+	}
+	return val, nil
+}
+
+// DecodeArray is the same as Decode but it returns []interface{}.
+// You should use it to parse JSON arrays.
+func (d *Decoder) DecodeArray() ([]interface{}, error) {
+	if c := d.skipSpaces(); c != '[' {
+		return nil, d.error(c, "looking for beginning of array")
+	}
+	val, err := d.array()
+	if err != nil {
+		return nil, err
+	}
+	if c := d.skipSpaces(); d.pos < d.end {
+		return nil, d.error(c, "after top-level value")
+	}
+	return val, nil
 }
 
 // any used to decode any valid JSON value, and returns an
 // interface{} that holds the actual data
-func (d *decoder) any() (interface{}, error) {
+func (d *Decoder) any() (interface{}, error) {
 	switch c := d.skipSpaces(); c {
 	case '"':
 		return d.string()
@@ -88,7 +172,7 @@ func (d *decoder) any() (interface{}, error) {
 }
 
 // string called by `any` or `object`(for map keys) after reading `"`
-func (d *decoder) string() (string, error) {
+func (d *Decoder) string() (string, error) {
 	d.pos++
 
 	var (
@@ -117,7 +201,12 @@ scan:
 				}
 				s = string(data)
 			} else {
-				s = d.sdata[start:d.pos]
+				if d.usestring {
+					s = d.sdata[start:d.pos]
+				} else {
+
+					s = string(d.data[start:d.pos])
+				}
 			}
 			d.pos++
 			return s, nil
@@ -159,7 +248,7 @@ escape_u:
 }
 
 // number called by `any` after reading `-` or number between 0 to 9
-func (d *decoder) number(neg bool) (float64, error) {
+func (d *Decoder) number(neg bool) (float64, error) {
 	var (
 		n       float64
 		c       byte
@@ -214,11 +303,18 @@ func (d *decoder) number(neg bool) (float64, error) {
 	}
 
 	if isFloat {
-		v, err := strconv.ParseFloat(d.sdata[start:d.pos], 64)
-		if err != nil {
+		var (
+			err error
+			sn  string
+		)
+		if d.usestring {
+			sn = d.sdata[start:d.pos]
+		} else {
+			sn = string(d.data[start:d.pos])
+		}
+		if n, err = strconv.ParseFloat(sn, 64); err != nil {
 			return 0, err
 		}
-		n = v
 	}
 	if neg {
 		return -n, nil
@@ -227,7 +323,7 @@ func (d *decoder) number(neg bool) (float64, error) {
 }
 
 // array accept valid JSON array value
-func (d *decoder) array() ([]interface{}, error) {
+func (d *Decoder) array() ([]interface{}, error) {
 	// the '[' token already scanned
 	d.pos++
 
@@ -266,7 +362,7 @@ out:
 }
 
 // object accept valid JSON array value
-func (d *decoder) object() (map[string]interface{}, error) {
+func (d *Decoder) object() (map[string]interface{}, error) {
 	// the '{' token already scanned
 	d.pos++
 
@@ -325,7 +421,7 @@ func (d *decoder) object() (map[string]interface{}, error) {
 }
 
 // next return the next byte in the input
-func (d *decoder) next() byte {
+func (d *Decoder) next() byte {
 	d.pos++
 	if d.pos < d.end {
 		return d.data[d.pos]
@@ -334,7 +430,7 @@ func (d *decoder) next() byte {
 }
 
 // returns the next char after white spaces
-func (d *decoder) skipSpaces() byte {
+func (d *Decoder) skipSpaces() byte {
 loop:
 	if d.pos == d.end {
 		return 0
@@ -349,7 +445,7 @@ loop:
 }
 
 // emit sytax errors
-func (d *decoder) error(c byte, context string) error {
+func (d *Decoder) error(c byte, context string) error {
 	if d.pos < d.end {
 		return &SyntaxError{"invalid character " + quoteChar(c) + " " + context, d.pos + 1}
 	}

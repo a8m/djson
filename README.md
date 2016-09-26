@@ -36,9 +36,17 @@ The current version is `1.0.0-alpha.1`, and I'm waiting to hear from you
 if there are any issues or bug reports, to make it stable.  
 (comment: there is a test file named `decode_test` that contains a [test case](https://github.com/a8m/djson/blob/master/decode_test.go#L104) that
 compares the results to `encoding/json` - feel free to add more values if you find they are important)  
-I'm also plaining to add the `DecodeStream(io.ReaderCloser)` method, to support stream decoding
+I'm also plaining to add the `DecodeStream(io.ReaderCloser)` method(or `NewDecoder(io.ReaderCloser)`), to support stream decoding
 without breaking performance.
 
 
-
+### Benchmark
+There are 3 benchmark types. small, medium and large payloads.  
+All the 3 taked from the `jsonparser` project, and they trying to simulate a real-life usage.
+Each test results sats on a metrics table below. lower is better.  
+__Time/op__ is in nanoseconds, __B/op__ is how many bytes were allocated
+per op and __allocs/op__ is the total number of memory allocations.
+Bench result that is better than the standard `encoding/json` marked in bold text.  
+Benchmarks run on AWS EC2 instance(c4.xlarge). see: [screenshots](link
+to screenshot in assets)
 
