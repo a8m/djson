@@ -106,4 +106,7 @@ You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmar
 | a8m/djson.[AllocString][as] |    __372382__  |   214053   |   __1413__     |
 
 
+### LICENSE
+MIT
+
 [as]: https://github.com/a8m/djson/blob/master/decode.go#L25
