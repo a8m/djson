@@ -8,7 +8,7 @@ alt="Build Status"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="LICENSE"></a>
 </p>
 
-DJSON is a JSON decoder for Go that is ___3~ times faster___ than
+DJSON is a JSON decoder for Go that is ___2~ to 3~ times faster___ than
 the standard `encoding/json` and the existing solutions, when dealing with
 arbitrary JSON payload. [See benchmarks below](#benchmark).  
 It is a good approach for people who are using `json.Unmarshal` together
