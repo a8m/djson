@@ -41,7 +41,7 @@ without breaking performance.
 
 
 ### Benchmark
-There are 3 benchmark types: small, medium and large payloads.  
+There are 3 benchmark types: [small](#small-payload), [medium](#medium-payload) and [large](#large-payload) payloads.  
 All the 3 are taken from the `jsonparser` project, and they try to simulate a real-life usage. 
 Each result from the different benchmark types is shown in a metric table below.
 The lower the metrics are, the better the result is.
@@ -59,7 +59,7 @@ Compared libraries:
 - https://github.com/mreiferson/go-ujson
 - https://github.com/ugorji/go/codec
 
-#### small payload
+#### Small payload
 Each library in the test gets a small payload to process that weighs 134 bytes.  
 You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L3), and the test screenshot [here](https://github.com/a8m/djson/blob/master/assets/bench_small.png).
 
@@ -75,7 +75,7 @@ You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmar
 | a8m/djson.[AllocString][as] |    __2195__   | __1169__ |   __13__      |
 
 
-#### medium payload
+#### Medium payload
 Each library in the test gets a medium payload to process that weighs 1.7KB.  
 You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L5), and the test screenshot [here](https://github.com/a8m/djson/blob/master/assets/bench_medium.png).
 
@@ -90,7 +90,7 @@ You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmar
 | a8m/djson                    |    __22871__   | __10100__ |   __195__     |
 | a8m/djson.[AllocString][as]  |    __19296__   | __10619__ |   __87__      |
 
-#### large payload
+#### Large payload
 Each library in the test gets a large payload to process that weighs 28KB.  
 You can see the payload [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L7), and the test screenshot [here](https://github.com/a8m/djson/blob/master/assets/bench_large.png).
 
