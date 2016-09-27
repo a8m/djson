@@ -22,10 +22,10 @@ func NewDecoder(data []byte) *Decoder {
 	}
 }
 
-// AllocString pre-allocate a string version of the data before starting
-// decoding.
-// It is used to make the decode operation more fast(see below) by doing one
-// allocation operation for string conversion(from bytes), and then use
+// AllocString pre-allocates a string version of the data before starting
+// to decode the data.
+// It is used to make the decode operation faster(see below) by doing one
+// allocation operation for string conversion(from bytes), and then uses
 // "slicing" to create non-escaped strings in the "Decoder.string" method.
 // However, string is a read-only slice, and since the slice references the
 // original array, as long as the slice is kept around, the garbage collector
@@ -56,7 +56,7 @@ func NewDecoder(data []byte) *Decoder {
 // 	delete(ev, "baz") // or ev["baz"] = "qux"
 //
 // 	// inpect memory stats again; MemStats.Alloc ~= 1M
-// 	// it means that the chunk that sat in the "baz" value is not freed
+// 	// it means that the chunk that was located in the "baz" value is not freed
 //
 func (d *Decoder) AllocString() {
 	d.sdata = string(d.data)
