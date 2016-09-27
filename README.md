@@ -58,8 +58,8 @@ Compared libraries:
 - https://github.com/mreiferson/go-ujson
 - https://github.com/ugorji/go/codec
 
-#### small payload
-The small payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L3),
+#### small payload benchmark
+This small payload weighs 134 bytes, you can see it [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L3),
 and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_small.png)
 
 | __Library__                 | __Time/op__   | __B/op__ | __allocs/op__ |
@@ -74,7 +74,7 @@ and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/
 | a8m/djson.[AllocString][as] |    __2195__   | __1169__ |   __13__      |
 
 #### medium payload
-The medium payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L5),
+The medium payload weighs 1.7KB, you can see it [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L5),
 and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_medium.png)
 
 | __Library__                  | __Time/op__    | __B/op__ | __allocs/op__  |
@@ -89,7 +89,7 @@ and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/
 | a8m/djson.[AllocString][as]  |    __19296__   | __10619__ |   __87__      |
 
 #### large payload
-The large payload is [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L7),
+The large payload weights 28KB, you can see it [here](https://github.com/a8m/djson/blob/master/benchmark/benchmark_fixture.go#L7),
 and the benchmark screenshot is [here](https://github.com/a8m/djson/blob/master/assets/bench_large.png)
 
 | __Library__                 | __Time/op__    | __B/op__   | __allocs/op__  |
