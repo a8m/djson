@@ -48,8 +48,7 @@ The lower the metrics are, the better the result is.
 __Time/op__ is in nanoseconds, __B/op__ is how many bytes were allocated
 per op and __allocs/op__ is the total number of memory allocations.  
 Benchmark results that are better than `encoding/json` are marked in bold text.  
-The Benchmark tests run on AWS EC2 instance(c4.xlarge). see: [screenshots](link
-to screenshot in assets)
+The Benchmark tests run on AWS EC2 instance(c4.xlarge). see: [screenshots](https://github.com/a8m/djson/tree/master/assets)
 
 Compared libraries:
 - https://golang.org/pkg/encoding/json
