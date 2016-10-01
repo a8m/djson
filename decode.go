@@ -255,7 +255,7 @@ escape_u:
 	goto scan
 }
 
-// number called by `any` after reading `-` or number between 0 to 9
+// number called by `any` after reading number between 0 to 9
 func (d *Decoder) number() (float64, error) {
 	var (
 		n       float64
