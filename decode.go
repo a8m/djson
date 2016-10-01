@@ -129,9 +129,17 @@ func (d *Decoder) any() (interface{}, error) {
 	case '"':
 		return d.string()
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		return d.number(false)
+		return d.number()
 	case '-':
-		return d.number(true)
+		d.pos++
+		if c = d.data[d.pos]; c < '0' && c > '9' {
+			return nil, d.error(c, "in negative numeric literal")
+		}
+		n, err := d.number()
+		if err != nil {
+			return nil, err
+		}
+		return -n, nil
 	case 'f':
 		d.pos++
 		if d.end-d.pos < 4 {
@@ -248,23 +256,13 @@ escape_u:
 }
 
 // number called by `any` after reading `-` or number between 0 to 9
-func (d *Decoder) number(neg bool) (float64, error) {
+func (d *Decoder) number() (float64, error) {
 	var (
 		n       float64
-		c       byte
-		start   int
 		isFloat bool
+		c       = d.data[d.pos]
+		start   = d.pos
 	)
-
-	if neg {
-		d.pos++
-		if c = d.data[d.pos]; c < '0' && c > '9' {
-			return 0, d.error(c, "in negative numeric literal")
-		}
-	}
-
-	start = d.pos
-	c = d.data[d.pos]
 
 	// digits first
 	switch {
@@ -315,9 +313,6 @@ func (d *Decoder) number(neg bool) (float64, error) {
 		if n, err = strconv.ParseFloat(sn, 64); err != nil {
 			return 0, err
 		}
-	}
-	if neg {
-		return -n, nil
 	}
 	return n, nil
 }
