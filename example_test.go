@@ -20,7 +20,7 @@ func ExampleDecode() {
 
 	fmt.Printf("%+v", val)
 
-	// Output:
+	// - Output:
 	// [map[Name:Platypus Order:Monotremata] map[Name:Quoll Order:Dasyuromorphia]]
 }
 
@@ -94,6 +94,6 @@ func ExampleDecoder_AllocString() {
 
 	fmt.Printf("Value: %+v", val)
 
-	// Output:
+	// - Output:
 	// map[count:93 userid:4234A event_type:click]
 }
