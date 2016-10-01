@@ -43,7 +43,7 @@ func ExampleDecodeArray() {
 
 // Example that demonstrate the basic transformation I do on each incoming
 // event.
-// `lowerKeys` and `§fixEncoding` are two generic methods, and they don't care
+// `lowerKeys` and `fixEncoding` are two generic methods, and they don't care
 // about the schema.
 // The three others(`maxMindGeo`, `dateFormat`and `refererURL`) process and
 // extend the events dynamically based on the "APP_ID" field.
