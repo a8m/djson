@@ -12,8 +12,8 @@ DJSON is a JSON decoder for Go that is ___2~ to 3~ times faster___ than
 the standard `encoding/json` and the existing solutions, when dealing with
 arbitrary JSON payload. [See benchmarks below](#benchmark).  
 It is a good approach for people who are using `json.Unmarshal` together
-with `map[string]interface{}`, don't know what the schema is, and still
-want good performance with minimal changes.
+with `interface{}`, don't know what the schema is, and still want good
+performance with minimal changes.
 
 ### Motivation
 While searching for a JSON parser solution for my projects, that is faster than the standard library, with zero reflection tests, allocates less memory and is still safe(I didn't want the `"unsafe"` package in my production code, in order to reduce memory consumption).  
