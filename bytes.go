@@ -1,4 +1,3 @@
-// Most of the code here copied from the Go standard library, encoding/json/decode.go
 package djson
 
 import (
@@ -7,6 +6,8 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 )
+
+// Most of the code in this file copied from the Go standard library, encoding/json/decode.go
 
 // quoteChar formats c as a quoted character literal
 func quoteChar(c byte) string {
